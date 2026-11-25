@@ -1,6 +1,21 @@
+import { createClient } from 'npm:@supabase/supabase-js@2'
 // Zwei-Wege-Sync zwischen dem Google-Familienkalender und der Tabelle "events".
 // Läuft alle 15 Minuten per pg_cron und zusätzlich auf Knopfdruck aus der App.
-import { admin, authorize } from '../_shared/admin.ts'
+// ---- gemeinsame Hilfsfunktionen (in jeder Funktion enthalten, damit sie im Supabase-Editor als eine Datei funktioniert) ----
+
+export const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+
+/** Nur Aufrufe mit Service-Role-Key (Cron) oder angemeldete Nutzer:innen zulassen. */
+export async function authorize(req: Request): Promise<{ ok: boolean; familyId?: string }> {
+  const token = req.headers.get('Authorization')?.replace('Bearer ', '')
+  if (!token) return { ok: false }
+  if (token === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) return { ok: true }
+  const { data } = await admin.auth.getUser(token)
+  if (!data.user) return { ok: false }
+  const { data: m } = await admin.from('members').select('family_id').eq('user_id', data.user.id).maybeSingle()
+  return m ? { ok: true, familyId: m.family_id } : { ok: false }
+}
+// ---- Ende Hilfsfunktionen ----
 
 const API = 'https://www.googleapis.com/calendar/v3'
 
