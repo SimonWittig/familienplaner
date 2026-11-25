@@ -28,6 +28,3 @@ begin
 end $$;
 create trigger events_touch before update on events for each row execute function touch_updated_at();
 
--- Zeitpläne (pg_cron + pg_net in Supabase aktivieren, dann <PROJECT> und <SERVICE_ROLE_KEY> ersetzen):
--- select cron.schedule('reminders', '*/5 * * * *', $$ select net.http_post('https://<PROJECT>.supabase.co/functions/v1/send-reminders', headers => '{"Authorization":"Bearer <SERVICE_ROLE_KEY>"}'::jsonb) $$);
--- select cron.schedule('gcal-sync', '*/15 * * * *', $$ select net.http_post('https://<PROJECT>.supabase.co/functions/v1/google-calendar-sync', headers => '{"Authorization":"Bearer <SERVICE_ROLE_KEY>"}'::jsonb) $$);

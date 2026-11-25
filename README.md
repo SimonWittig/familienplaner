@@ -49,7 +49,7 @@ npx supabase link --project-ref <PROJEKT>
 npx supabase secrets set VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=... VAPID_SUBJECT=mailto:du@example.com \
   GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... APP_TIMEZONE=Europe/Vienna
 npx supabase functions deploy send-reminders --no-verify-jwt
-npx supabase functions deploy google-calendar-sync
+npx supabase functions deploy google-calendar-sync --no-verify-jwt
 ```
 Dann unter **Database → Extensions** `pg_cron` und `pg_net` aktivieren und die zwei `cron.schedule`-Zeilen am Ende von `0002_google_calendar.sql` (mit eingesetzter Projekt-ID und Service-Role-Key) im SQL Editor ausführen.
 

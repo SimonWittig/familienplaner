@@ -5,11 +5,12 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 export const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
-/** Nur Aufrufe mit Service-Role-Key (Cron) oder angemeldete Nutzer:innen zulassen. */
+/** Nur Aufrufe vom Zeitplan (x-cron-secret) oder von angemeldeten Familienmitgliedern zulassen. */
 export async function authorize(req: Request): Promise<{ ok: boolean; familyId?: string }> {
+  const cron = Deno.env.get('CRON_SECRET')
+  if (cron && req.headers.get('x-cron-secret') === cron) return { ok: true }
   const token = req.headers.get('Authorization')?.replace('Bearer ', '')
   if (!token) return { ok: false }
-  if (token === Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) return { ok: true }
   const { data } = await admin.auth.getUser(token)
   if (!data.user) return { ok: false }
   const { data: m } = await admin.from('members').select('family_id').eq('user_id', data.user.id).maybeSingle()
@@ -101,9 +102,15 @@ async function syncFamily(link: { family_id: string; refresh_token: string; cale
   await admin.from('google_links').update({ last_synced_at: syncStart }).eq('family_id', link.family_id)
 }
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   const auth = await authorize(req)
-  if (!auth.ok) return new Response('unauthorized', { status: 401 })
+  if (!auth.ok) return new Response('unauthorized', { status: 401, headers: CORS })
   let q = admin.from('google_links').select('*')
   if (auth.familyId) q = q.eq('family_id', auth.familyId)
   const { data: links } = await q
@@ -111,5 +118,5 @@ Deno.serve(async (req) => {
   for (const l of links ?? []) {
     try { await syncFamily(l); results[l.family_id] = 'ok' } catch (e) { results[l.family_id] = (e as Error).message }
   }
-  return Response.json(results, { headers: { 'Access-Control-Allow-Origin': '*' } })
+  return Response.json(results, { headers: CORS })
 })
