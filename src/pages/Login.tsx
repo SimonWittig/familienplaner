@@ -21,6 +21,7 @@ export function Login() {
       >
         Mit Google anmelden
       </button>
+      <a className="muted" href="/datenschutz" style={{ marginTop: 24, fontSize: 13 }}>Datenschutz</a>
     </div>
   )
 }

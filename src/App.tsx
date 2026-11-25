@@ -8,6 +8,8 @@ import Schule from './pages/Schule'
 import Todos from './pages/Todos'
 import Familie from './pages/Familie'
 import { Login, Onboarding } from './pages/Login'
+import Datenschutz from './pages/Datenschutz'
+import { useLocation } from 'react-router-dom'
 
 const TABS = [
   { to: '/', icon: '🏠', label: 'Heute' },
@@ -19,7 +21,9 @@ const TABS = [
 
 function Shell() {
   const { loading, session, me } = useFamily()
+  const location = useLocation()
   useLocalReminders()
+  if (location.pathname === '/datenschutz') return <Datenschutz />
   if (loading) return <div className="page center"><div className="logo">🏡</div></div>
   if (supabase && !session) return <Login />
   if (supabase && !me) return <Onboarding />
