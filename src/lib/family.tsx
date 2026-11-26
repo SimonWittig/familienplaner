@@ -51,7 +51,7 @@ export function FamilyProvider({ children }: { children: ReactNode }) {
       setLoading(false)
       return
     }
-    const { data: m } = await supabase.from('members').select('*').eq('user_id', s.session.user.id).maybeSingle()
+    const { data: m } = await supabase.from('members').select('*').eq('user_id', s.session.user.id).order('created_at').limit(1).maybeSingle()
     setMe((m as Member) ?? null)
     if (m) {
       const { data: f } = await supabase.from('families').select('name, invite_code').eq('id', m.family_id).single()

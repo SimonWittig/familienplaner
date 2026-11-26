@@ -35,12 +35,16 @@ export function Onboarding() {
   const [code, setCode] = useState('')
   const [err, setErr] = useState<string | null>(null)
 
+  const [busy, setBusy] = useState(false)
   const run = async (fn: 'create_family' | 'join_family') => {
+    if (busy) return
+    setBusy(true)
     setErr(null)
     const args = fn === 'create_family' ? { family_name: familyName || 'Unsere Familie', my_name: name } : { code: code.trim(), my_name: name }
     const { error } = await supabase!.rpc(fn, args)
     if (error) setErr(error.message)
     else await refresh()
+    setBusy(false)
   }
 
   return (
@@ -51,10 +55,10 @@ export function Onboarding() {
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="z. B. Papa oder Lena" />
         <h2 className="section">Familie beitreten</h2>
         <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Einladungscode" />
-        <button className="btn primary" disabled={!name || !code} onClick={() => void run('join_family')}>Beitreten</button>
+        <button className="btn primary" disabled={busy || !name || !code} onClick={() => void run('join_family')}>Beitreten</button>
         <h2 className="section">…oder neue Familie anlegen</h2>
         <input value={familyName} onChange={(e) => setFamilyName(e.target.value)} placeholder="z. B. Familie Wittig" />
-        <button className="btn" disabled={!name} onClick={() => void run('create_family')}>Familie anlegen</button>
+        <button className="btn" disabled={busy || !name} onClick={() => void run('create_family')}>Familie anlegen</button>
         {err && <p className="note error">{err}</p>}
       </div>
     </div>
