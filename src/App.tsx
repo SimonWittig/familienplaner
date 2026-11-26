@@ -10,6 +10,25 @@ import Familie from './pages/Familie'
 import { Login, Onboarding } from './pages/Login'
 import Datenschutz from './pages/Datenschutz'
 import { useLocation } from 'react-router-dom'
+import { Component, type ReactNode } from 'react'
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null as Error | null }
+  static getDerivedStateFromError(error: Error) {
+    return { error }
+  }
+  render() {
+    if (!this.state.error) return this.props.children
+    return (
+      <div className="page center">
+        <div className="logo">😕</div>
+        <p>Da ist etwas schiefgelaufen.</p>
+        <p className="muted">{this.state.error.message}</p>
+        <button className="btn primary" onClick={() => location.reload()}>Neu laden</button>
+      </div>
+    )
+  }
+}
 
 const TABS = [
   { to: '/', icon: '🏠', label: 'Heute' },
@@ -52,10 +71,12 @@ function Shell() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <FamilyProvider>
-        <Shell />
-      </FamilyProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <FamilyProvider>
+          <Shell />
+        </FamilyProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }

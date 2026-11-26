@@ -8,6 +8,7 @@ import type { TableName, Tables } from './types'
  */
 const LS_PREFIX = 'familienplaner:'
 const listeners = new Set<() => void>()
+let channelSeq = 0
 const notify = () => listeners.forEach((l) => l())
 
 function lsRead<T>(table: string): T[] {
@@ -89,7 +90,7 @@ export function useTable<K extends TableName>(table: K, familyId: string | null)
     let channel: ReturnType<NonNullable<typeof supabase>['channel']> | null = null
     if (supabase && familyId) {
       channel = supabase
-        .channel(`${table}:${familyId}`)
+        .channel(`${table}:${familyId}:${++channelSeq}`)
         .on('postgres_changes', { event: '*', schema: 'public', table, filter: `family_id=eq.${familyId}` }, () => void reload())
         .subscribe()
     }
